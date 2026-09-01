@@ -83,3 +83,74 @@ class TestMiddleware:
         downstream = _Recorder()
         await _run(AuthMiddleware(downstream), {"type": "lifespan"})
         assert downstream.scope["type"] == "lifespan"
+
+
+class TestLandingPage:
+    """Non-/mcp paths serve the landing page; /mcp keeps working."""
+
+    async def test_root_serves_html(self):
+        downstream = _Recorder()
+        sent = await _run(
+            AuthMiddleware(downstream),
+            {"type": "http", "method": "GET", "path": "/"},
+        )
+        assert sent[0]["status"] == 200
+        headers = dict(sent[0]["headers"])
+        assert b"text/html" in headers[b"content-type"]
+        assert b"<title>Cue</title>" in sent[1]["body"]
+        assert downstream.scope is None  # never reached FastMCP
+
+    async def test_arbitrary_path_serves_html(self):
+        downstream = _Recorder()
+        sent = await _run(
+            AuthMiddleware(downstream),
+            {"type": "http", "method": "GET", "path": "/pricing"},
+        )
+        assert sent[0]["status"] == 200
+
+    async def test_head_returns_headers_without_body(self):
+        downstream = _Recorder()
+        sent = await _run(
+            AuthMiddleware(downstream),
+            {"type": "http", "method": "HEAD", "path": "/"},
+        )
+        assert sent[0]["status"] == 200
+        assert sent[1]["body"] == b""
+
+    async def test_post_to_non_mcp_path_is_404(self):
+        # A marketing page should not answer POSTs with HTML.
+        downstream = _Recorder()
+        sent = await _run(
+            AuthMiddleware(downstream),
+            {"type": "http", "method": "POST", "path": "/"},
+        )
+        assert sent[0]["status"] == 404
+
+    async def test_mcp_post_still_reaches_fastmcp(self):
+        """The landing page must not shadow the MCP route."""
+        downstream = _Recorder()
+        await _run(
+            AuthMiddleware(downstream),
+            {"type": "http", "method": "POST", "path": "/mcp"},
+        )
+        assert downstream.scope is not None
+
+    async def test_mcp_get_still_405_not_landing_page(self):
+        """/mcp GET must stay 405 -- it must NOT fall through to the page."""
+        downstream = _Recorder()
+        sent = await _run(
+            AuthMiddleware(downstream),
+            {"type": "http", "method": "GET", "path": "/mcp"},
+        )
+        assert sent[0]["status"] == 405
+
+    async def test_keyed_mcp_path_still_routes(self):
+        from callyr.auth.context import get_api_key
+
+        downstream = _Recorder()
+        await _run(
+            AuthMiddleware(downstream),
+            {"type": "http", "method": "POST", "path": "/mcp/abc123"},
+        )
+        assert downstream.scope["path"] == "/mcp"
+        assert get_api_key() == "abc123"

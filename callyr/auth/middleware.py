@@ -1,24 +1,81 @@
-"""ASGI middleware: key extraction and GET-block.
+"""ASGI middleware: landing page, key extraction, and GET-block.
 
-Wraps the FastMCP app. Two jobs:
+Wraps the FastMCP app. Three jobs:
 
-1. Pull the API key out of the URL path (/mcp/<key>) and stash it in a
+1. Serve the static landing page on every non-/mcp path. Routing lives here
+   rather than in vercel.json rewrites so that one place owns the decision --
+   a declarative rewrite plus a catch-all function can silently disagree
+   about which owns a path, and that failure is invisible until production.
+
+2. Pull the API key out of the URL path (/mcp/<key>) and stash it in a
    ContextVar for the tools, then rewrite the path to /mcp so FastMCP routes
    normally.
 
-2. Reject GET on the MCP path. FastMCP's stateless mode still accepts GET and
+3. Reject GET on the MCP path. FastMCP's stateless mode still accepts GET and
    opens a long-lived SSE stream instead of returning 405
    (https://github.com/PrefectHQ/fastmcp/issues/3179). On serverless that is a
    function hanging on the billing clock.
 """
 
 import logging
+from pathlib import Path
 
 from callyr.auth.context import set_api_key
 
 log = logging.getLogger("callyr.auth")
 
 MCP_PATH = "/mcp"
+
+# site/index.html, relative to the repo root (callyr/auth/ -> ../..).
+_SITE_INDEX = Path(__file__).resolve().parents[2] / "site" / "index.html"
+
+# Read once at cold start, not per request: the page is static and a
+# serverless container serves many requests.
+_PAGE: bytes | None = None
+
+
+def _landing_page() -> bytes | None:
+    """The landing page bytes, or None if it is not in the bundle."""
+    global _PAGE
+    if _PAGE is None:
+        try:
+            _PAGE = _SITE_INDEX.read_bytes()
+        except OSError:
+            log.warning("landing page not found at %s", _SITE_INDEX)
+            return None
+    return _PAGE
+
+
+async def _send_page(send, body: bytes, status: int = 200) -> None:
+    await send(
+        {
+            "type": "http.response.start",
+            "status": status,
+            "headers": [
+                (b"content-type", b"text/html; charset=utf-8"),
+                (b"content-length", str(len(body)).encode()),
+                # Short cache: the page is static, but a redeploy should reach
+                # visitors quickly rather than sit in a CDN for a day.
+                (b"cache-control", b"public, max-age=300"),
+            ],
+        }
+    )
+    await send({"type": "http.response.body", "body": body})
+
+
+async def _send_404(send) -> None:
+    body = b"Not Found"
+    await send(
+        {
+            "type": "http.response.start",
+            "status": 404,
+            "headers": [
+                (b"content-type", b"text/plain; charset=utf-8"),
+                (b"content-length", str(len(body)).encode()),
+            ],
+        }
+    )
+    await send({"type": "http.response.body", "body": body})
 
 
 async def _send_405(send) -> None:
@@ -61,4 +118,15 @@ class AuthMiddleware:
             scope["path"] = MCP_PATH
             scope["raw_path"] = MCP_PATH.encode("utf-8")
 
-        await self.app(scope, receive, send)
+            await self.app(scope, receive, send)
+            return
+
+        # Everything outside /mcp is the landing page. GET/HEAD only -- a POST
+        # to a marketing page is not something to answer with HTML.
+        if scope.get("method") in ("GET", "HEAD"):
+            page = _landing_page()
+            if page is not None:
+                await _send_page(send, b"" if scope["method"] == "HEAD" else page)
+                return
+
+        await _send_404(send)
