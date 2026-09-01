@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "callyr/server.py": {
+      "maxDuration": 60,
+      "memory": 1024,
+      "excludeFiles": "{tests/**,supabase/**,scripts/**,**/test_*.py,.pytest_cache/**,**/__pycache__/**}"
+    }
+  }
+}

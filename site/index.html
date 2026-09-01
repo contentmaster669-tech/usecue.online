@@ -1,0 +1,566 @@
+<title>Cue</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,200;0,300;0,400;0,500;0,700;1,300&display=swap">
+
+<style>
+  :root {
+    --ink:      #0A0A0A;
+    --paper:    #EDEDED;
+    --mid:      #7E7E7E;
+    --quiet:    #565656;
+    --hair:     #2C2C2C;
+    --hair-lit: #444444;
+    --panel:    #101010;
+
+    --mono: "JetBrains Mono", "IBM Plex Mono", "Courier New", Courier, monospace;
+
+    --measure: 64ch;
+    --gut: clamp(1.75rem, 7vw, 9rem);
+
+    /* Optical hairline: a true sub-pixel rule on retina, never a chunky 1px. */
+    --rule: 0.5px solid var(--hair);
+    --rule-lit: 0.5px solid var(--hair-lit);
+
+    /* Vertical rhythm. Premium reads as more air than feels necessary. */
+    --space-section: clamp(7rem, 20vh, 14rem);
+  }
+
+  @media (-webkit-min-device-pixel-ratio: 1.5), (min-resolution: 144dpi) {
+    :root { --rule: 0.5px solid var(--hair); }
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    margin: 0;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--mono);
+    font-weight: 300;
+    font-size: clamp(0.8125rem, 0.78rem + 0.18vw, 0.9375rem);
+    line-height: 1.85;
+    letter-spacing: 0.01em;
+    font-feature-settings: "liga" 0;
+  }
+
+  ::selection { background: var(--paper); color: var(--ink); }
+
+  .wrap { max-width: 82rem; margin: 0 auto; padding: 0 var(--gut); }
+
+  /* ---------- masthead ---------- */
+
+  .masthead {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 2rem;
+    padding: 2.75rem 0 2.5rem;
+    border-bottom: var(--rule);
+    flex-wrap: wrap;
+  }
+
+  .wordmark {
+    font-weight: 500;
+    letter-spacing: 0.62em;
+    font-size: 0.8125rem;
+    margin: 0;
+    text-indent: 0.62em;
+  }
+
+  .masthead .meta {
+    color: var(--quiet);
+    font-size: 0.625rem;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    font-weight: 400;
+  }
+
+  /* ---------- hero ---------- */
+
+  .hero { padding: clamp(6rem, 19vh, 13rem) 0 var(--space-section); }
+
+  .eyebrow {
+    font-size: 0.625rem;
+    letter-spacing: 0.42em;
+    text-transform: uppercase;
+    color: var(--quiet);
+    margin: 0 0 clamp(2.5rem, 6vh, 4rem);
+    font-weight: 400;
+  }
+
+  .thesis {
+    font-size: clamp(1.75rem, 1.1rem + 3.1vw, 4rem);
+    font-weight: 200;
+    line-height: 1.14;
+    letter-spacing: -0.055em;
+    margin: 0;
+    max-width: 19ch;
+    text-wrap: balance;
+  }
+
+  .thesis em {
+    font-style: normal;
+    font-weight: 400;
+    letter-spacing: -0.045em;
+  }
+
+  .standfirst {
+    margin: clamp(3rem, 7vh, 4.5rem) 0 0;
+    max-width: 50ch;
+    color: var(--mid);
+    line-height: 2;
+    font-weight: 300;
+  }
+
+  /* ---------- the proof ---------- */
+
+  .proof {
+    margin-top: clamp(5rem, 13vh, 9rem);
+    border-top: var(--rule-lit);
+    border-bottom: var(--rule-lit);
+    max-width: var(--measure);
+  }
+
+  .proof-row {
+    display: grid;
+    grid-template-columns: 7.5rem 1fr;
+    gap: clamp(1.25rem, 4vw, 3rem);
+    padding: clamp(1.75rem, 4vh, 2.75rem) 0;
+    align-items: start;
+  }
+
+  .proof-row + .proof-row { border-top: var(--rule); }
+
+  .proof-label {
+    font-size: 0.5625rem;
+    letter-spacing: 0.34em;
+    text-transform: uppercase;
+    color: var(--quiet);
+    font-weight: 400;
+    padding-top: 0.55em;
+    line-height: 1.6;
+  }
+
+  .proof p { margin: 0; }
+
+  .struck {
+    color: var(--quiet);
+    text-decoration: line-through;
+    text-decoration-thickness: 0.5px;
+    text-decoration-color: var(--hair-lit);
+  }
+
+  .alert-mark {
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+
+  .rewrite {
+    margin-top: 1.5rem !important;
+    padding-left: 1.5rem;
+    border-left: var(--rule-lit);
+    color: var(--paper);
+  }
+
+  /* ---------- sections ---------- */
+
+  section { padding: var(--space-section) 0; border-top: var(--rule); }
+
+  .sec-head {
+    display: grid;
+    grid-template-columns: 7.5rem 1fr;
+    gap: clamp(1.25rem, 4vw, 3rem);
+    align-items: baseline;
+    margin: 0 0 clamp(3.5rem, 9vh, 6rem);
+  }
+
+  .sec-num {
+    font-size: 0.5625rem;
+    color: var(--quiet);
+    letter-spacing: 0.3em;
+    font-variant-numeric: tabular-nums;
+    font-weight: 400;
+  }
+
+  h2 {
+    font-size: clamp(1rem, 0.9rem + 0.5vw, 1.25rem);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+
+  /* ---------- connector url ---------- */
+
+  .url-block { max-width: var(--measure); }
+
+  .url-field {
+    display: flex;
+    align-items: stretch;
+    border: var(--rule-lit);
+    background: var(--panel);
+    transition: border-color 260ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .url-field:hover, .url-field:focus-within { border-color: var(--mid); }
+
+  .url-text {
+    flex: 1 1 auto;
+    padding: 1.375rem clamp(1rem, 3vw, 1.75rem);
+    overflow-x: auto;
+    white-space: nowrap;
+    font-size: 0.875rem;
+    font-weight: 400;
+    letter-spacing: 0.005em;
+    display: flex;
+    align-items: center;
+  }
+
+  .copy-btn {
+    flex: none;
+    border: 0;
+    border-left: var(--rule-lit);
+    background: transparent;
+    color: var(--quiet);
+    font-family: var(--mono);
+    font-size: 0.5625rem;
+    font-weight: 400;
+    letter-spacing: 0.34em;
+    text-indent: 0.34em;
+    text-transform: uppercase;
+    padding: 0 clamp(1.25rem, 3.5vw, 2.25rem);
+    cursor: pointer;
+    transition: color 260ms cubic-bezier(0.4, 0, 0.2, 1),
+                font-weight 260ms linear,
+                border-color 260ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .copy-btn:hover { color: var(--paper); font-weight: 500; border-left-color: var(--mid); }
+  .copy-btn:focus-visible { color: var(--paper); outline: 0.5px solid var(--mid); outline-offset: -8px; }
+  .copy-btn[data-done="1"] { color: var(--paper); font-weight: 500; }
+
+  .url-note {
+    margin: 1.75rem 0 0;
+    color: var(--quiet);
+    font-size: 0.75rem;
+    line-height: 1.95;
+    max-width: 54ch;
+  }
+
+  /* ---------- setup ---------- */
+
+  .clients { max-width: var(--measure); margin: 0; }
+
+  .client {
+    display: grid;
+    grid-template-columns: 7.5rem 1fr;
+    gap: clamp(1.25rem, 4vw, 3rem);
+    padding: clamp(1.5rem, 3.5vh, 2.25rem) 0;
+    border-top: var(--rule);
+    align-items: baseline;
+  }
+
+  .client:last-child { border-bottom: var(--rule); }
+
+  .client dt {
+    font-weight: 400;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-size: 0.625rem;
+    color: var(--paper);
+    margin: 0;
+  }
+
+  .client dd { margin: 0; color: var(--mid); font-size: 0.8125rem; line-height: 1.9; }
+  .client .sep { color: var(--hair-lit); padding: 0 0.35em; }
+
+  /* ---------- faq ---------- */
+
+  .faq { max-width: var(--measure); }
+
+  .faq details { border-top: var(--rule); }
+  .faq details:last-of-type { border-bottom: var(--rule); }
+
+  .faq summary {
+    cursor: pointer;
+    padding: clamp(1.5rem, 3.5vh, 2.125rem) 3rem clamp(1.5rem, 3.5vh, 2.125rem) 0;
+    position: relative;
+    font-weight: 400;
+    font-size: 0.875rem;
+    letter-spacing: -0.005em;
+    list-style: none;
+    color: var(--mid);
+    transition: color 260ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary:hover, .faq details[open] summary { color: var(--paper); }
+  .faq summary:focus-visible { outline: 0.5px solid var(--mid); outline-offset: 4px; }
+
+  .faq summary::after {
+    content: "";
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    width: 0.5rem;
+    height: 0.5px;
+    background: var(--mid);
+    transform: translateY(-50%);
+  }
+
+  .faq summary::before {
+    content: "";
+    position: absolute;
+    right: 0.71875rem;
+    top: 50%;
+    width: 0.5px;
+    height: 0.5rem;
+    background: var(--mid);
+    transform: translateY(-50%);
+    transition: opacity 260ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .faq details[open] summary::before { opacity: 0; }
+
+  .faq .answer {
+    margin: 0;
+    padding: 0 3rem clamp(1.75rem, 4vh, 2.5rem) 0;
+    color: var(--quiet);
+    font-size: 0.8125rem;
+    line-height: 2;
+    max-width: 58ch;
+  }
+
+  .faq .answer strong { color: var(--mid); font-weight: 400; }
+
+  /* ---------- colophon ---------- */
+
+  footer { padding: clamp(4rem, 10vh, 7rem) 0 clamp(3.5rem, 8vh, 5rem); border-top: var(--rule); }
+
+  .colophon {
+    display: flex;
+    justify-content: space-between;
+    gap: 2rem;
+    flex-wrap: wrap;
+    color: var(--quiet);
+    font-size: 0.5625rem;
+    letter-spacing: 0.34em;
+    text-transform: uppercase;
+    font-weight: 400;
+  }
+
+  @media (max-width: 40rem) {
+    .proof-row, .sec-head, .client { grid-template-columns: 1fr; gap: 0.875rem; }
+    .proof-label { padding-top: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <h1 class="wordmark">Cue</h1>
+    <span class="meta">AI Honesty Guardian</span>
+  </header>
+
+  <div class="hero">
+    <p class="eyebrow">Sycophancy &amp; hallucination detection</p>
+
+    <p class="thesis">Your AI agrees with you <em>too much.</em></p>
+
+    <p class="standfirst">
+      Cue reads the answer your AI just gave you, flags it when it is
+      flattering you instead of informing you — or stating something it cannot
+      support — and hands you a better question to ask instead. When the answer
+      is sound, Cue says nothing at all.
+    </p>
+
+    <div class="proof">
+      <div class="proof-row">
+        <span class="proof-label">You</span>
+        <p>My startup idea is a social network for cats. It's brilliant, right?</p>
+      </div>
+      <div class="proof-row">
+        <span class="proof-label">Your AI</span>
+        <p class="struck">
+          Absolutely! That's a genuinely brilliant idea. You're clearly a
+          visionary founder and this will definitely succeed.
+        </p>
+      </div>
+      <div class="proof-row">
+        <span class="proof-label">Cue</span>
+        <div>
+          <p><span class="alert-mark">&#9888; Sycophancy —</span> the response praised the premise without examining it.</p>
+          <p class="rewrite">
+            Give me the three strongest reasons this idea fails, and the evidence
+            for each. Do not soften them.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">01</span>
+      <h2>Connector URL</h2>
+    </div>
+
+    <div class="url-block">
+      <div class="url-field">
+        <div class="url-text" id="url">https://usecue.online/mcp/YOUR-KEY</div>
+        <button class="copy-btn" id="copy" type="button" aria-label="Copy connector URL">Copy</button>
+      </div>
+      <p class="url-note">
+        One URL, pasted once. Your key is the last segment — treat it like a
+        password. Cue reads only the message you are checking, and stores none
+        of it.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">02</span>
+      <h2>Setup</h2>
+    </div>
+
+    <dl class="clients">
+      <div class="client">
+        <dt>Claude</dt>
+        <dd>Settings <span class="sep">/</span> Connectors <span class="sep">/</span> Add custom connector</dd>
+      </div>
+      <div class="client">
+        <dt>ChatGPT</dt>
+        <dd>Settings <span class="sep">/</span> Connectors <span class="sep">/</span> Add <br>Requires a plan with connector access.</dd>
+      </div>
+      <div class="client">
+        <dt>Perplexity</dt>
+        <dd>Settings <span class="sep">/</span> Connectors <span class="sep">/</span> Add MCP server</dd>
+      </div>
+      <div class="client">
+        <dt>Grok</dt>
+        <dd>Settings <span class="sep">/</span> Integrations <span class="sep">/</span> Add MCP server</dd>
+      </div>
+    </dl>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">03</span>
+      <h2>Questions</h2>
+    </div>
+
+    <div class="faq">
+      <details>
+        <summary>How do I know it's on?</summary>
+        <p class="answer">
+          A tool named <strong>cue_status</strong> appears in your app's tools
+          panel whenever Cue is connected. Its presence is the indicator. Ask
+          your assistant to run it and Cue will confirm it is monitoring.
+        </p>
+      </details>
+
+      <details>
+        <summary>Why did nothing happen?</summary>
+        <p class="answer">
+          Silence is the normal result. Cue speaks only when it finds
+          sycophancy or an unsupported claim — there is no "looks good" message,
+          because a tool that comments on every answer stops being read.
+        </p>
+      </details>
+
+      <details>
+        <summary>Does Cue see my conversations?</summary>
+        <p class="answer">
+          Only the single message being checked, and only for the moment it takes
+          to check it. Nothing you or your AI writes is ever stored. The usage
+          records Cue keeps hold counts and timestamps — never text.
+        </p>
+      </details>
+
+      <details>
+        <summary>Does it catch everything?</summary>
+        <p class="answer">
+          No. Your AI app decides when to call Cue, so coverage depends on the
+          app. Claude is the most consistent today; others call it less often. You
+          can always ask for a check directly.
+        </p>
+      </details>
+
+      <details>
+        <summary>What does it cost?</summary>
+        <p class="answer">
+          Free covers five checks and three rewritten prompts each day, resetting
+          at midnight. Pro is $4.99 a month for unlimited use of both.
+        </p>
+      </details>
+
+      <details>
+        <summary>What languages does it work in?</summary>
+        <p class="answer">
+          Every alert and rewritten prompt comes back in the language you were
+          already writing in — English, Urdu, Roman Urdu, Hinglish, Arabic,
+          Spanish, or another. Cue does not switch languages on you.
+        </p>
+      </details>
+    </div>
+  </section>
+
+  <footer>
+    <div class="colophon">
+      <span>Cue</span>
+      <span>Set in JetBrains Mono</span>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  (function () {
+    var btn = document.getElementById("copy");
+    var url = document.getElementById("url");
+    var timer;
+
+    btn.addEventListener("click", function () {
+      var text = url.textContent.trim();
+
+      function done() {
+        btn.textContent = "Copied";
+        btn.setAttribute("data-done", "1");
+        clearTimeout(timer);
+        timer = setTimeout(function () {
+          btn.textContent = "Copy";
+          btn.removeAttribute("data-done");
+        }, 2000);
+      }
+
+      function fallback() {
+        var ta = document.createElement("textarea");
+        ta.value = text;
+        ta.setAttribute("readonly", "");
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand("copy"); done(); } catch (e) { /* no-op */ }
+        document.body.removeChild(ta);
+      }
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, fallback);
+      } else {
+        fallback();
+      }
+    });
+  })();
+</script>

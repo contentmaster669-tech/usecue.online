@@ -1,0 +1,17 @@
+# Never upload secrets. Vercel env vars are the only path for these.
+.env
+.env.*
+!.env.example
+
+# Not needed at runtime.
+tests/
+supabase/
+scripts/
+.pytest_cache/
+.ruff_cache/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+CLAUDE.md
