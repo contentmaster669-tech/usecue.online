@@ -1,4 +1,5 @@
 <title>Cue</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230A0A0A'/%3E%3Cpath d='M8 22 L16 11.5' stroke='%23EDEDED' stroke-width='2.6' fill='none'/%3E%3Cpath d='M24 22 L17.6 13.6' stroke='%23EDEDED' stroke-width='2.6' fill='none'/%3E%3Ccircle cx='16.9' cy='9.6' r='1.7' fill='%23EDEDED'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,200;0,300;0,400;0,500;0,700;1,300&display=swap">
@@ -48,7 +49,14 @@
     line-height: 1.85;
     letter-spacing: 0.01em;
     font-feature-settings: "liga" 0;
+    /* The page itself never scrolls sideways. Wide content (the URL) scrolls
+       inside its own container instead. */
+    overflow-x: hidden;
   }
+
+  /* Monospace does not hyphenate, so a long token in prose would otherwise
+     push the layout wider than the viewport. */
+  p, dd, summary, .answer { overflow-wrap: break-word; }
 
   ::selection { background: var(--paper); color: var(--ink); }
 
@@ -66,12 +74,33 @@
     flex-wrap: wrap;
   }
 
-  .wordmark {
-    font-weight: 500;
-    letter-spacing: 0.62em;
-    font-size: 0.8125rem;
+  .lockup {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
     margin: 0;
-    text-indent: 0.62em;
+    font-size: 0.8125rem;
+    font-weight: 500;
+  }
+
+  .mark {
+    /* Scales with the wordmark; stroke thickens slightly at small sizes so
+       the gap does not disappear into the apex. */
+    width: 1.55em;
+    height: 1.55em;
+    flex: none;
+    overflow: visible;
+    fill: var(--paper);
+    stroke: var(--paper);
+    stroke-width: 2.2;
+    stroke-linecap: butt;   /* flat caps read editorial; round reads SaaS */
+  }
+
+  .mark path { fill: none; }
+
+  .wordmark {
+    letter-spacing: 0.62em;
+    text-indent: 0.62em;   /* offsets the trailing letter-space */
   }
 
   .masthead .meta {
@@ -355,9 +384,74 @@
     font-weight: 400;
   }
 
-  @media (max-width: 40rem) {
-    .proof-row, .sec-head, .client { grid-template-columns: 1fr; gap: 0.875rem; }
+  /* ---------- responsive ----------
+     Two breakpoints, each fixing a specific failure rather than uniformly
+     shrinking. 48rem: the 7.5rem label gutter starves the content column.
+     34rem: wordmark tracking and the URL row stop fitting. */
+
+  @media (max-width: 48rem) {
+    /* Stacked, not squeezed. The label becomes a caption above its content,
+       keeping the content column full-width instead of ~40%. */
+    .proof-row,
+    .sec-head,
+    .client {
+      grid-template-columns: 1fr;
+      gap: 0.6rem;
+    }
+
     .proof-label { padding-top: 0; }
+
+    /* Section number and title now sit on one line -- stacking them would
+       waste a whole line on two characters. */
+    .sec-head {
+      display: flex;
+      align-items: baseline;
+      gap: 0.9rem;
+      margin-bottom: clamp(2.5rem, 7vh, 3.5rem);
+    }
+
+    /* Vertical rhythm compresses, but stays generous relative to viewport. */
+    :root { --space-section: clamp(4.5rem, 13vh, 7rem); }
+
+    .hero { padding-top: clamp(3.5rem, 11vh, 6rem); }
+
+    .thesis { max-width: 100%; }
+  }
+
+  @media (max-width: 34rem) {
+    /* 0.62em tracking overflows a 320px viewport; 0.34em keeps the
+       editorial feel without pushing the wordmark off-screen. */
+    .wordmark { letter-spacing: 0.34em; text-indent: 0.34em; }
+
+    .masthead { gap: 0.6rem; padding: 1.75rem 0 1.5rem; }
+    .masthead .meta { font-size: 0.5625rem; letter-spacing: 0.22em; }
+
+    /* The URL is one long unbreakable token. Stacking the button below it
+       gives the URL the full width and keeps the button a comfortable
+       tap target rather than a sliver. */
+    .url-field { flex-direction: column; align-items: stretch; }
+
+    .url-text {
+      padding: 1rem;
+      font-size: 0.8125rem;
+      /* Still scrolls inside its own box -- never the page. */
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .copy-btn {
+      border-left: 0;
+      border-top: var(--rule-lit);
+      padding: 0.95rem 1rem;   /* >=44px tall: iOS tap-target minimum */
+      text-align: center;
+    }
+
+    /* Tighter measure so the eye is not tracking edge to edge on a phone. */
+    .standfirst, .url-note, .faq .answer { max-width: 100%; }
+
+    .faq summary { padding-right: 2.25rem; }
+    .faq .answer { padding-right: 0.5rem; }
+
+    .colophon { font-size: 0.5rem; letter-spacing: 0.24em; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -368,7 +462,18 @@
 <div class="wrap">
 
   <header class="masthead">
-    <h1 class="wordmark">Cue</h1>
+    <h1 class="lockup">
+      <!-- The mark: a proofreader's caret whose strokes stop short of
+           meeting. The gap is the unexamined join between question and
+           answer; the dot is Cue's intervention, placed exactly there.
+           Rotated, the two strokes also read as an angular C. -->
+      <svg class="mark" viewBox="0 0 32 32" role="img" aria-label="Cue">
+        <path d="M8 22 L16 11.5" />
+        <path d="M24 22 L17.6 13.6" />
+        <circle cx="16.9" cy="9.6" r="1.7" />
+      </svg>
+      <span class="wordmark">Cue</span>
+    </h1>
     <span class="meta">AI Honesty Guardian</span>
   </header>
 
