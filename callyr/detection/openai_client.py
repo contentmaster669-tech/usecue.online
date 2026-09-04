@@ -67,9 +67,7 @@ async def detect(
             input=[
                 {
                     "role": "user",
-                    "content": _build_input(
-                        user_message, ai_response, conversation_history
-                    ),
+                    "content": _build_input(user_message, ai_response, conversation_history),
                 }
             ],
             text_format=Detection,

@@ -32,8 +32,8 @@ python scripts/issue_key.py you@example.com
 ```
 
 The raw key prints once and is not recoverable. Your connector URL is
-`https://usecue.online/mcp/<key>`, which is what users paste into their AI
-app's MCP connector settings.
+`https://usecue.online/mcp`, which is what users paste into their AI
+header. Both go into your AI app's connector settings.
 
 ## Development
 

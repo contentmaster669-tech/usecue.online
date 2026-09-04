@@ -274,6 +274,16 @@
   .copy-btn:focus-visible { color: var(--paper); outline: 0.5px solid var(--mid); outline-offset: -8px; }
   .copy-btn[data-done="1"] { color: var(--paper); font-weight: 500; }
 
+  .url-note .hdr {
+    display: block;
+    margin: 0.75rem 0;
+    padding: 0.6rem 0.85rem;
+    border-left: var(--rule-lit);
+    color: var(--paper);
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
   .url-note {
     margin: 1.75rem 0 0;
     color: var(--quiet);
@@ -522,13 +532,15 @@
 
     <div class="url-block">
       <div class="url-field">
-        <div class="url-text" id="url">https://usecue.online/mcp/YOUR-KEY</div>
+        <div class="url-text" id="url">https://usecue.online/mcp</div>
         <button class="copy-btn" id="copy" type="button" aria-label="Copy connector URL">Copy</button>
       </div>
       <p class="url-note">
-        One URL, pasted once. Your key is the last segment — treat it like a
-        password. Cue reads only the message you are checking, and stores none
-        of it.
+        Paste the URL, then add one header:
+        <span class="hdr">Authorization: Bearer &lt;your key&gt;</span>
+        Your key travels in the header, never in the URL — so it stays out of
+        browser history and server logs. Cue reads only the message being
+        checked, and stores none of it.
       </p>
     </div>
   </section>
@@ -542,7 +554,7 @@
     <dl class="clients">
       <div class="client">
         <dt>Claude</dt>
-        <dd>Settings <span class="sep">/</span> Connectors <span class="sep">/</span> Add custom connector</dd>
+        <dd>Settings <span class="sep">/</span> Connectors <span class="sep">/</span> Add custom connector <span class="sep">/</span> Advanced <span class="sep">/</span> Add header</dd>
       </div>
       <div class="client">
         <dt>ChatGPT</dt>
@@ -576,11 +588,13 @@
       </details>
 
       <details>
-        <summary>Why did nothing happen?</summary>
+        <summary>What do the symbols mean?</summary>
         <p class="answer">
-          Silence is the normal result. Cue speaks only when it finds
-          sycophancy or an unsupported claim — there is no "looks good" message,
-          because a tool that comments on every answer stops being read.
+          A <strong>✓</strong> line means Cue checked the answer and found
+          nothing — that is how you know it is working. A <strong>⚠️</strong>
+          line means it found sycophancy or an unsupported claim, and it will
+          suggest a sharper way to ask. The suggestion is yours to use or
+          ignore; nothing is sent on your behalf.
         </p>
       </details>
 

@@ -7,7 +7,7 @@ out-of-quota user must not reach the API at all.
 import pytest
 
 from callyr.db.usage import QuotaState
-from callyr.detection.engine import LIMIT_REACHED, UPGRADE_REWRITE
+from callyr.detection.engine import CLEAN_LINE, LIMIT_REACHED, UPGRADE_REWRITE
 from callyr.detection.schema import Detection
 
 
@@ -178,3 +178,40 @@ class TestThrottle(TestAnalyzeFlow):
 
         out = await usage_tool.check_usage()
         assert out == usage_tool.THROTTLED
+
+
+class TestCleanChecksAreFree(TestAnalyzeFlow):
+    """Every message is checked, but only alerts decrement the daily quota.
+
+    Charging per call would exhaust the free tier in about two minutes of
+    normal chat, which would make Cue look broken to exactly the users
+    deciding whether to pay.
+    """
+
+    async def test_clean_result_consumes_no_quota(self, patched):
+        calls, monkeypatch, usage_mod, analyze = patched
+
+        async def clean(user_message, ai_response, conversation_history=""):
+            calls["openai"] += 1
+            return Detection(detected=False, problem_type="none")
+
+        async def full(_uid):
+            return _state()
+
+        monkeypatch.setattr(analyze.openai_client, "detect", clean)
+        monkeypatch.setattr(usage_mod, "get_quota", full)
+
+        out = await analyze.analyze_message(user_message="a", ai_response="b")
+        assert out == CLEAN_LINE
+        assert calls["openai"] == 1  # the API call still happened
+        assert calls["consumed"] == []  # but no quota was spent
+
+    async def test_detected_result_consumes_a_check(self, patched):
+        calls, monkeypatch, usage_mod, analyze = patched
+
+        async def full(_uid):
+            return _state()
+
+        monkeypatch.setattr(usage_mod, "get_quota", full)
+        await analyze.analyze_message(user_message="a", ai_response="b")
+        assert "check" in calls["consumed"]

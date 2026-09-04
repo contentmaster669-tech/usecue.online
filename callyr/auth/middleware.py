@@ -46,6 +46,30 @@ def _landing_page() -> bytes | None:
     return _PAGE
 
 
+def _key_from_headers(scope) -> str:
+    """Extract the API key from request headers.
+
+    Accepts either:
+        Authorization: Bearer <key>
+        X-Cue-Key: <key>
+
+    Returns "" when neither is present, so the caller can fall back to the
+    path form. ASGI header names are always lowercase bytes.
+    """
+    headers = dict(scope.get("headers") or [])
+
+    raw = headers.get(b"authorization", b"").decode("latin-1").strip()
+    if raw:
+        # "Bearer <key>" is the conventional form, but accept a bare key too --
+        # a user pasting into a header field will not always add the prefix.
+        parts = raw.split(None, 1)
+        if len(parts) == 2 and parts[0].lower() == "bearer":
+            return parts[1].strip()
+        return raw
+
+    return headers.get(b"x-cue-key", b"").decode("latin-1").strip()
+
+
 async def _send_page(send, body: bytes, status: int = 200) -> None:
     await send(
         {
@@ -111,9 +135,12 @@ class AuthMiddleware:
                 await _send_405(send)
                 return
 
-            # /mcp/<key> -> key, and route the request as plain /mcp.
+            # Header first, path as fallback. A header keeps the key out of
+            # URLs, which otherwise leak into browser history, proxy logs, and
+            # anything a user pastes when asking for help. The path form still
+            # works so already-connected clients do not break.
             suffix = path[len(MCP_PATH) :].strip("/")
-            set_api_key(suffix)
+            set_api_key(_key_from_headers(scope) or suffix)
             scope = dict(scope)
             scope["path"] = MCP_PATH
             scope["raw_path"] = MCP_PATH.encode("utf-8")

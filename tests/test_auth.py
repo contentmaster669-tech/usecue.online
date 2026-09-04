@@ -154,3 +154,90 @@ class TestLandingPage:
         )
         assert downstream.scope["path"] == "/mcp"
         assert get_api_key() == "abc123"
+
+
+class TestHeaderAuth:
+    """The key travels in a header so it stays out of URLs, which leak into
+    browser history, proxy logs, and anything a user pastes for help."""
+
+    async def test_authorization_bearer(self):
+        from callyr.auth.context import get_api_key
+
+        downstream = _Recorder()
+        await _run(
+            AuthMiddleware(downstream),
+            {
+                "type": "http",
+                "method": "POST",
+                "path": "/mcp",
+                "headers": [(b"authorization", b"Bearer hdr-key-1")],
+            },
+        )
+        assert get_api_key() == "hdr-key-1"
+
+    async def test_authorization_bare_key(self):
+        # A user pasting into a header field will not always add "Bearer".
+        from callyr.auth.context import get_api_key
+
+        downstream = _Recorder()
+        await _run(
+            AuthMiddleware(downstream),
+            {
+                "type": "http",
+                "method": "POST",
+                "path": "/mcp",
+                "headers": [(b"authorization", b"bare-key-2")],
+            },
+        )
+        assert get_api_key() == "bare-key-2"
+
+    async def test_x_cue_key_header(self):
+        from callyr.auth.context import get_api_key
+
+        downstream = _Recorder()
+        await _run(
+            AuthMiddleware(downstream),
+            {
+                "type": "http",
+                "method": "POST",
+                "path": "/mcp",
+                "headers": [(b"x-cue-key", b"custom-key-3")],
+            },
+        )
+        assert get_api_key() == "custom-key-3"
+
+    async def test_header_wins_over_path(self):
+        from callyr.auth.context import get_api_key
+
+        downstream = _Recorder()
+        await _run(
+            AuthMiddleware(downstream),
+            {
+                "type": "http",
+                "method": "POST",
+                "path": "/mcp/path-key",
+                "headers": [(b"authorization", b"Bearer header-key")],
+            },
+        )
+        assert get_api_key() == "header-key"
+
+    async def test_path_still_works_without_a_header(self):
+        """Already-connected clients must not break."""
+        from callyr.auth.context import get_api_key
+
+        downstream = _Recorder()
+        await _run(
+            AuthMiddleware(downstream),
+            {"type": "http", "method": "POST", "path": "/mcp/legacy-key", "headers": []},
+        )
+        assert get_api_key() == "legacy-key"
+
+    async def test_no_key_anywhere_is_empty(self):
+        from callyr.auth.context import get_api_key
+
+        downstream = _Recorder()
+        await _run(
+            AuthMiddleware(downstream),
+            {"type": "http", "method": "POST", "path": "/mcp", "headers": []},
+        )
+        assert get_api_key() == ""

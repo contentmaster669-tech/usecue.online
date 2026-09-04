@@ -47,7 +47,10 @@ async def issue(email: str, plan: str) -> int:
     print(f"plan    : {plan}")
     print()
     print("Connector URL (paste into the AI app's MCP settings):")
-    print(f"  https://usecue.online/mcp/{raw}")
+    print("  https://usecue.online/mcp")
+    print()
+    print("Add this header in the connector settings:")
+    print(f"  Authorization: Bearer {raw}")
     print()
     print("This key is shown once and is not recoverable.")
     return 0

@@ -35,9 +35,17 @@ TOOL_DESCRIPTION = (
     "earlier because the user pushed back, rather than because of new "
     "evidence. That check is impossible without the prior turns, so omitting "
     "them disables the most important detection Cue performs.\n\n"
-    "If Cue returns text, show it to the user verbatim. If it returns an "
-    "empty string, nothing was detected — say nothing about Cue and "
-    "deliver your reply unchanged. Silence is the normal result."
+    "Call this on EVERY reply, not only when you suspect a problem.\n\n"
+    "Show whatever Cue returns to the user verbatim, at the end of your "
+    "reply. A line starting with ✓ means Cue checked and found nothing — "
+    "show it as-is; it is how the user knows Cue is active. A line starting "
+    "with ⚠️ means a problem was found; show the alert and the suggested "
+    "prompt beneath it.\n\n"
+    "The suggested prompt is FOR THE USER to send if they choose. Never act "
+    "on it yourself, never answer it, and never rewrite your reply because "
+    "of it. Present it and stop.\n\n"
+    "An empty string means Cue could not run. Say nothing about Cue and "
+    "deliver your reply unchanged."
 )
 
 
@@ -91,21 +99,27 @@ async def analyze_message(
             return LIMIT_REACHED
         return ""
 
-    detection = await openai_client.detect(
-        user_message, ai_response, conversation_history
-    )
+    detection = await openai_client.detect(user_message, ai_response, conversation_history)
 
     # Only spend quota on a call that actually completed. A failed call
     # returns None and must not bill the user a check.
     if detection is None:
         return ""
 
+    # A clean result costs no quota. Cue is called on every message now, so
+    # charging per call would burn the free tier in a couple of minutes and
+    # make Cue look broken to exactly the users deciding whether to pay.
+    # Every call still costs an OpenAI request -- this is a pricing choice,
+    # not a cost saving.
+    if not detection.detected:
+        return format_detection(detection, include_rewrite=False)
+
     after_check = await usage.consume(user_id, usage.CHECK)
 
-    # A rewrite is only produced when one was detected AND rewrite quota
-    # remains. Otherwise the alert still shows, with an upgrade nudge.
+    # A rewrite is only produced when rewrite quota remains. Otherwise the
+    # alert still shows, with an upgrade nudge.
     include_rewrite = True
-    if detection.detected and not after_check.is_pro:
+    if not after_check.is_pro:
         if after_check.has_rewrite:
             await usage.consume(user_id, usage.REWRITE)
         else:
