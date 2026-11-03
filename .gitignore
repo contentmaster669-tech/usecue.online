@@ -1,15 +1,5 @@
 .env
 .env.*
-!.env.example
-
-__pycache__/
-*.py[cod]
-.pytest_cache/
-.ruff_cache/
-*.egg-info/
-build/
-dist/
-.venv/
-venv/
 
 .vercel
+.DS_Store

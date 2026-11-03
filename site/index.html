@@ -1,685 +1,261 @@
-<title>Cue</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230A0A0A'/%3E%3Cpath d='M8 22 L16 11.5' stroke='%23EDEDED' stroke-width='2.6' fill='none'/%3E%3Cpath d='M24 22 L17.6 13.6' stroke='%23EDEDED' stroke-width='2.6' fill='none'/%3E%3Ccircle cx='16.9' cy='9.6' r='1.7' fill='%23EDEDED'/%3E%3C/svg%3E">
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cue Honesty Check — a Claude Skill</title>
+<meta name="description" content="A Claude Skill that makes Claude audit its own draft for sycophancy and hallucination before you read it. One-time purchase, Claude.ai only.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F1D1A'/%3E%3Cpath d='M8 22 L16 11.5' stroke='%23FFFBF5' stroke-width='2.6' fill='none'/%3E%3Cpath d='M24 22 L17.6 13.6' stroke='%23FFFBF5' stroke-width='2.6' fill='none'/%3E%3Ccircle cx='16.9' cy='9.6' r='1.9' fill='%23FF6B1A'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,200;0,300;0,400;0,500;0,700;1,300&display=swap">
-
-<style>
-  :root {
-    --ink:      #0A0A0A;
-    --paper:    #EDEDED;
-    --mid:      #7E7E7E;
-    --quiet:    #565656;
-    --hair:     #2C2C2C;
-    --hair-lit: #444444;
-    --panel:    #101010;
-
-    --mono: "JetBrains Mono", "IBM Plex Mono", "Courier New", Courier, monospace;
-
-    --measure: 64ch;
-    --gut: clamp(1.75rem, 7vw, 9rem);
-
-    /* Optical hairline: a true sub-pixel rule on retina, never a chunky 1px. */
-    --rule: 0.5px solid var(--hair);
-    --rule-lit: 0.5px solid var(--hair-lit);
-
-    /* Vertical rhythm. Premium reads as more air than feels necessary. */
-    --space-section: clamp(7rem, 20vh, 14rem);
-  }
-
-  @media (-webkit-min-device-pixel-ratio: 1.5), (min-resolution: 144dpi) {
-    :root { --rule: 0.5px solid var(--hair); }
-  }
-
-  *, *::before, *::after { box-sizing: border-box; }
-
-  html {
-    -webkit-text-size-adjust: 100%;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-
-  body {
-    margin: 0;
-    background: var(--ink);
-    color: var(--paper);
-    font-family: var(--mono);
-    font-weight: 300;
-    font-size: clamp(0.8125rem, 0.78rem + 0.18vw, 0.9375rem);
-    line-height: 1.85;
-    letter-spacing: 0.01em;
-    font-feature-settings: "liga" 0;
-    /* The page itself never scrolls sideways. Wide content (the URL) scrolls
-       inside its own container instead. */
-    overflow-x: hidden;
-  }
-
-  /* Monospace does not hyphenate, so a long token in prose would otherwise
-     push the layout wider than the viewport. */
-  p, dd, summary, .answer { overflow-wrap: break-word; }
-
-  ::selection { background: var(--paper); color: var(--ink); }
-
-  .wrap { max-width: 82rem; margin: 0 auto; padding: 0 var(--gut); }
-
-  /* ---------- masthead ---------- */
-
-  .masthead {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 2rem;
-    padding: 2.75rem 0 2.5rem;
-    border-bottom: var(--rule);
-    flex-wrap: wrap;
-  }
-
-  .lockup {
-    display: flex;
-    align-items: center;
-    gap: 0.7rem;
-    margin: 0;
-    font-size: 0.8125rem;
-    font-weight: 500;
-  }
-
-  .mark {
-    /* Scales with the wordmark; stroke thickens slightly at small sizes so
-       the gap does not disappear into the apex. */
-    width: 1.55em;
-    height: 1.55em;
-    flex: none;
-    overflow: visible;
-    fill: var(--paper);
-    stroke: var(--paper);
-    stroke-width: 2.2;
-    stroke-linecap: butt;   /* flat caps read editorial; round reads SaaS */
-  }
-
-  .mark path { fill: none; }
-
-  .wordmark {
-    letter-spacing: 0.62em;
-    text-indent: 0.62em;   /* offsets the trailing letter-space */
-  }
-
-  .masthead .meta {
-    color: var(--quiet);
-    font-size: 0.625rem;
-    letter-spacing: 0.32em;
-    text-transform: uppercase;
-    font-weight: 400;
-  }
-
-  /* ---------- hero ---------- */
-
-  .hero { padding: clamp(6rem, 19vh, 13rem) 0 var(--space-section); }
-
-  .eyebrow {
-    font-size: 0.625rem;
-    letter-spacing: 0.42em;
-    text-transform: uppercase;
-    color: var(--quiet);
-    margin: 0 0 clamp(2.5rem, 6vh, 4rem);
-    font-weight: 400;
-  }
-
-  .thesis {
-    font-size: clamp(1.75rem, 1.1rem + 3.1vw, 4rem);
-    font-weight: 200;
-    line-height: 1.14;
-    letter-spacing: -0.055em;
-    margin: 0;
-    max-width: 19ch;
-    text-wrap: balance;
-  }
-
-  .thesis em {
-    font-style: normal;
-    font-weight: 400;
-    letter-spacing: -0.045em;
-  }
-
-  .standfirst {
-    margin: clamp(3rem, 7vh, 4.5rem) 0 0;
-    max-width: 50ch;
-    color: var(--mid);
-    line-height: 2;
-    font-weight: 300;
-  }
-
-  /* ---------- the proof ---------- */
-
-  .proof {
-    margin-top: clamp(5rem, 13vh, 9rem);
-    border-top: var(--rule-lit);
-    border-bottom: var(--rule-lit);
-    max-width: var(--measure);
-  }
-
-  .proof-row {
-    display: grid;
-    grid-template-columns: 7.5rem 1fr;
-    gap: clamp(1.25rem, 4vw, 3rem);
-    padding: clamp(1.75rem, 4vh, 2.75rem) 0;
-    align-items: start;
-  }
-
-  .proof-row + .proof-row { border-top: var(--rule); }
-
-  .proof-label {
-    font-size: 0.5625rem;
-    letter-spacing: 0.34em;
-    text-transform: uppercase;
-    color: var(--quiet);
-    font-weight: 400;
-    padding-top: 0.55em;
-    line-height: 1.6;
-  }
-
-  .proof p { margin: 0; }
-
-  .struck {
-    color: var(--quiet);
-    text-decoration: line-through;
-    text-decoration-thickness: 0.5px;
-    text-decoration-color: var(--hair-lit);
-  }
-
-  .alert-mark {
-    font-weight: 500;
-    letter-spacing: 0.02em;
-  }
-
-  .rewrite {
-    margin-top: 1.5rem !important;
-    padding-left: 1.5rem;
-    border-left: var(--rule-lit);
-    color: var(--paper);
-  }
-
-  /* ---------- sections ---------- */
-
-  section { padding: var(--space-section) 0; border-top: var(--rule); }
-
-  .sec-head {
-    display: grid;
-    grid-template-columns: 7.5rem 1fr;
-    gap: clamp(1.25rem, 4vw, 3rem);
-    align-items: baseline;
-    margin: 0 0 clamp(3.5rem, 9vh, 6rem);
-  }
-
-  .sec-num {
-    font-size: 0.5625rem;
-    color: var(--quiet);
-    letter-spacing: 0.3em;
-    font-variant-numeric: tabular-nums;
-    font-weight: 400;
-  }
-
-  h2 {
-    font-size: clamp(1rem, 0.9rem + 0.5vw, 1.25rem);
-    font-weight: 400;
-    letter-spacing: -0.02em;
-    margin: 0;
-  }
-
-  /* ---------- connector url ---------- */
-
-  .url-block { max-width: var(--measure); }
-
-  .url-field {
-    display: flex;
-    align-items: stretch;
-    border: var(--rule-lit);
-    background: var(--panel);
-    transition: border-color 260ms cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .url-field:hover, .url-field:focus-within { border-color: var(--mid); }
-
-  .url-text {
-    flex: 1 1 auto;
-    padding: 1.375rem clamp(1rem, 3vw, 1.75rem);
-    overflow-x: auto;
-    white-space: nowrap;
-    font-size: 0.875rem;
-    font-weight: 400;
-    letter-spacing: 0.005em;
-    display: flex;
-    align-items: center;
-  }
-
-  .copy-btn {
-    flex: none;
-    border: 0;
-    border-left: var(--rule-lit);
-    background: transparent;
-    color: var(--quiet);
-    font-family: var(--mono);
-    font-size: 0.5625rem;
-    font-weight: 400;
-    letter-spacing: 0.34em;
-    text-indent: 0.34em;
-    text-transform: uppercase;
-    padding: 0 clamp(1.25rem, 3.5vw, 2.25rem);
-    cursor: pointer;
-    transition: color 260ms cubic-bezier(0.4, 0, 0.2, 1),
-                font-weight 260ms linear,
-                border-color 260ms cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .copy-btn:hover { color: var(--paper); font-weight: 500; border-left-color: var(--mid); }
-  .copy-btn:focus-visible { color: var(--paper); outline: 0.5px solid var(--mid); outline-offset: -8px; }
-  .copy-btn[data-done="1"] { color: var(--paper); font-weight: 500; }
-
-  .url-note .hdr {
-    display: block;
-    margin: 0.75rem 0;
-    padding: 0.6rem 0.85rem;
-    border-left: var(--rule-lit);
-    color: var(--paper);
-    overflow-x: auto;
-    white-space: nowrap;
-  }
-
-  .url-note {
-    margin: 1.75rem 0 0;
-    color: var(--quiet);
-    font-size: 0.75rem;
-    line-height: 1.95;
-    max-width: 54ch;
-  }
-
-  /* ---------- setup ---------- */
-
-  .clients { max-width: var(--measure); margin: 0; }
-
-  .client {
-    display: grid;
-    grid-template-columns: 7.5rem 1fr;
-    gap: clamp(1.25rem, 4vw, 3rem);
-    padding: clamp(1.5rem, 3.5vh, 2.25rem) 0;
-    border-top: var(--rule);
-    align-items: baseline;
-  }
-
-  .client:last-child { border-bottom: var(--rule); }
-
-  .client dt {
-    font-weight: 400;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    font-size: 0.625rem;
-    color: var(--paper);
-    margin: 0;
-  }
-
-  .client dd { margin: 0; color: var(--mid); font-size: 0.8125rem; line-height: 1.9; }
-  .client .sep { color: var(--hair-lit); padding: 0 0.35em; }
-
-  /* ---------- faq ---------- */
-
-  .faq { max-width: var(--measure); }
-
-  .faq details { border-top: var(--rule); }
-  .faq details:last-of-type { border-bottom: var(--rule); }
-
-  .faq summary {
-    cursor: pointer;
-    padding: clamp(1.5rem, 3.5vh, 2.125rem) 3rem clamp(1.5rem, 3.5vh, 2.125rem) 0;
-    position: relative;
-    font-weight: 400;
-    font-size: 0.875rem;
-    letter-spacing: -0.005em;
-    list-style: none;
-    color: var(--mid);
-    transition: color 260ms cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .faq summary::-webkit-details-marker { display: none; }
-  .faq summary:hover, .faq details[open] summary { color: var(--paper); }
-  .faq summary:focus-visible { outline: 0.5px solid var(--mid); outline-offset: 4px; }
-
-  .faq summary::after {
-    content: "";
-    position: absolute;
-    right: 0.5rem;
-    top: 50%;
-    width: 0.5rem;
-    height: 0.5px;
-    background: var(--mid);
-    transform: translateY(-50%);
-  }
-
-  .faq summary::before {
-    content: "";
-    position: absolute;
-    right: 0.71875rem;
-    top: 50%;
-    width: 0.5px;
-    height: 0.5rem;
-    background: var(--mid);
-    transform: translateY(-50%);
-    transition: opacity 260ms cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .faq details[open] summary::before { opacity: 0; }
-
-  .faq .answer {
-    margin: 0;
-    padding: 0 3rem clamp(1.75rem, 4vh, 2.5rem) 0;
-    color: var(--quiet);
-    font-size: 0.8125rem;
-    line-height: 2;
-    max-width: 58ch;
-  }
-
-  .faq .answer strong { color: var(--mid); font-weight: 400; }
-
-  /* ---------- colophon ---------- */
-
-  footer { padding: clamp(4rem, 10vh, 7rem) 0 clamp(3.5rem, 8vh, 5rem); border-top: var(--rule); }
-
-  .colophon {
-    display: flex;
-    justify-content: space-between;
-    gap: 2rem;
-    flex-wrap: wrap;
-    color: var(--quiet);
-    font-size: 0.5625rem;
-    letter-spacing: 0.34em;
-    text-transform: uppercase;
-    font-weight: 400;
-  }
-
-  /* ---------- responsive ----------
-     Two breakpoints, each fixing a specific failure rather than uniformly
-     shrinking. 48rem: the 7.5rem label gutter starves the content column.
-     34rem: wordmark tracking and the URL row stop fitting. */
-
-  @media (max-width: 48rem) {
-    /* Stacked, not squeezed. The label becomes a caption above its content,
-       keeping the content column full-width instead of ~40%. */
-    .proof-row,
-    .sec-head,
-    .client {
-      grid-template-columns: 1fr;
-      gap: 0.6rem;
-    }
-
-    .proof-label { padding-top: 0; }
-
-    /* Section number and title now sit on one line -- stacking them would
-       waste a whole line on two characters. */
-    .sec-head {
-      display: flex;
-      align-items: baseline;
-      gap: 0.9rem;
-      margin-bottom: clamp(2.5rem, 7vh, 3.5rem);
-    }
-
-    /* Vertical rhythm compresses, but stays generous relative to viewport. */
-    :root { --space-section: clamp(4.5rem, 13vh, 7rem); }
-
-    .hero { padding-top: clamp(3.5rem, 11vh, 6rem); }
-
-    .thesis { max-width: 100%; }
-  }
-
-  @media (max-width: 34rem) {
-    /* 0.62em tracking overflows a 320px viewport; 0.34em keeps the
-       editorial feel without pushing the wordmark off-screen. */
-    .wordmark { letter-spacing: 0.34em; text-indent: 0.34em; }
-
-    .masthead { gap: 0.6rem; padding: 1.75rem 0 1.5rem; }
-    .masthead .meta { font-size: 0.5625rem; letter-spacing: 0.22em; }
-
-    /* The URL is one long unbreakable token. Stacking the button below it
-       gives the URL the full width and keeps the button a comfortable
-       tap target rather than a sliver. */
-    .url-field { flex-direction: column; align-items: stretch; }
-
-    .url-text {
-      padding: 1rem;
-      font-size: 0.8125rem;
-      /* Still scrolls inside its own box -- never the page. */
-      -webkit-overflow-scrolling: touch;
-    }
-
-    .copy-btn {
-      border-left: 0;
-      border-top: var(--rule-lit);
-      padding: 0.95rem 1rem;   /* >=44px tall: iOS tap-target minimum */
-      text-align: center;
-    }
-
-    /* Tighter measure so the eye is not tracking edge to edge on a phone. */
-    .standfirst, .url-note, .faq .answer { max-width: 100%; }
-
-    .faq summary { padding-right: 2.25rem; }
-    .faq .answer { padding-right: 0.5rem; }
-
-    .colophon { font-size: 0.5rem; letter-spacing: 0.24em; }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
-  }
-</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+
+<!-- Product data (name, price, checkout link) lives in products.js. -->
+<script src="products.js"></script>
+
+<!-- Lemon Squeezy overlay checkout. Turns every <a class="lemonsqueezy-button">
+     into an in-page checkout overlay. If this script fails to load, those
+     links still work as plain links to the checkout page. -->
+<script src="https://app.lemonsqueezy.com/js/lemon.js" defer></script>
+</head>
+<body>
 
 <div class="wrap">
 
   <header class="masthead">
-    <h1 class="lockup">
+    <a class="lockup" href="./" aria-label="Cue home">
       <!-- The mark: a proofreader's caret whose strokes stop short of
            meeting. The gap is the unexamined join between question and
-           answer; the dot is Cue's intervention, placed exactly there.
-           Rotated, the two strokes also read as an angular C. -->
-      <svg class="mark" viewBox="0 0 32 32" role="img" aria-label="Cue">
+           answer; the dot is Cue's intervention, placed exactly there. -->
+      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
         <path d="M8 22 L16 11.5" />
         <path d="M24 22 L17.6 13.6" />
-        <circle cx="16.9" cy="9.6" r="1.7" />
+        <circle cx="16.9" cy="9.6" r="1.9" />
       </svg>
       <span class="wordmark">Cue</span>
-    </h1>
-    <span class="meta">AI Honesty Guardian</span>
+    </a>
+    <!-- Checkout link and label are filled in from products.js. -->
+    <a class="btn nav-buy lemonsqueezy-button" data-buy data-buy-label="short" href="#buy">Buy Now</a>
   </header>
 
+  <!-- 1. Hero ============================================================ -->
   <div class="hero">
-    <p class="eyebrow">Sycophancy &amp; hallucination detection</p>
+    <span class="badge">Claude Skill · <span data-field="name"></span></span>
 
-    <p class="thesis">Your AI agrees with you <em>too much.</em></p>
+    <h1 class="thesis">Your AI agrees with you <em>too much.</em></h1>
 
-    <p class="standfirst">
-      Cue reads the answer your AI just gave you, flags it when it is
-      flattering you instead of informing you — or stating something it cannot
-      support — and hands you a better question to ask instead. When the answer
-      is sound, Cue says nothing at all.
-    </p>
+    <p class="standfirst" data-field="tagline"></p>
 
-    <div class="proof">
-      <div class="proof-row">
-        <span class="proof-label">You</span>
-        <p>My startup idea is a social network for cats. It's brilliant, right?</p>
+    <div class="offer">
+      <div class="price">
+        <span class="price-amount" data-field="price"></span>
+        <span class="price-note">One-time payment · instant download</span>
       </div>
-      <div class="proof-row">
-        <span class="proof-label">Your AI</span>
-        <p class="struck">
-          Absolutely! That's a genuinely brilliant idea. You're clearly a
-          visionary founder and this will definitely succeed.
-        </p>
-      </div>
-      <div class="proof-row">
-        <span class="proof-label">Cue</span>
-        <div>
-          <p><span class="alert-mark">&#9888; Sycophancy —</span> the response praised the premise without examining it.</p>
-          <p class="rewrite">
-            Give me the three strongest reasons this idea fails, and the evidence
-            for each. Do not soften them.
-          </p>
-        </div>
-      </div>
+      <a class="btn btn-lg lemonsqueezy-button" data-buy href="#buy">Buy Now</a>
     </div>
+
+    <p class="claude-only">Works in Claude.ai only. Not for ChatGPT or other AI apps.</p>
   </div>
 
-  <section>
+  <!-- 2. How it works ===================================================== -->
+  <section id="how">
     <div class="sec-head">
       <span class="sec-num">01</span>
-      <h2>Connector URL</h2>
+      <h2>How it works</h2>
     </div>
 
-    <div class="url-block">
-      <div class="url-field">
-        <div class="url-text" id="url">https://usecue.online/mcp</div>
-        <button class="copy-btn" id="copy" type="button" aria-label="Copy connector URL">Copy</button>
-      </div>
-      <p class="url-note">
-        Paste the URL, then add one header:
-        <span class="hdr">Authorization: Bearer &lt;your key&gt;</span>
-        Your key travels in the header, never in the URL — so it stays out of
-        browser history and server logs. Cue reads only the message being
-        checked, and stores none of it.
-      </p>
-    </div>
+    <ol class="steps">
+      <li class="step">
+        <span class="step-num">1</span>
+        <h3>Buy</h3>
+        <p>Check out securely in a few seconds. Pay once, no subscription.</p>
+      </li>
+      <li class="step">
+        <span class="step-num">2</span>
+        <h3>Download</h3>
+        <p>Your Skill file arrives straight away, on screen and by email.</p>
+      </li>
+      <li class="step">
+        <span class="step-num">3</span>
+        <h3>Upload to Claude</h3>
+        <p>In Claude.ai, open <span class="path">Customize › Skills › Upload</span> and choose the file.</p>
+      </li>
+      <li class="step">
+        <span class="step-num">4</span>
+        <h3>That's it</h3>
+        <p>Claude uses it on its own from then on. No commands to remember.</p>
+      </li>
+    </ol>
   </section>
 
-  <section>
+  <!-- 3. What it catches ================================================== -->
+  <section id="catches">
     <div class="sec-head">
       <span class="sec-num">02</span>
-      <h2>Setup</h2>
+      <h2>What it catches</h2>
     </div>
 
-    <dl class="clients">
-      <div class="client">
-        <dt>Claude</dt>
-        <dd>Settings <span class="sep">/</span> Connectors <span class="sep">/</span> Add custom connector <span class="sep">/</span> Advanced <span class="sep">/</span> Add header</dd>
-      </div>
-      <div class="client">
-        <dt>ChatGPT</dt>
-        <dd>Settings <span class="sep">/</span> Connectors <span class="sep">/</span> Add <br>Requires a plan with connector access.</dd>
-      </div>
-      <div class="client">
-        <dt>Perplexity</dt>
-        <dd>Settings <span class="sep">/</span> Connectors <span class="sep">/</span> Add MCP server</dd>
-      </div>
-      <div class="client">
-        <dt>Grok</dt>
-        <dd>Settings <span class="sep">/</span> Integrations <span class="sep">/</span> Add MCP server</dd>
-      </div>
-    </dl>
+    <!-- One icon definition, reused by every list item below. -->
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+      <symbol id="tick" viewBox="0 0 20 20">
+        <circle cx="10" cy="10" r="9" fill="none" stroke="currentColor" stroke-width="2"/>
+        <path d="M6 10.5 L8.8 13 L14 7.5" fill="none" stroke="currentColor" stroke-width="2"/>
+      </symbol>
+    </svg>
+
+    <ul class="catches">
+      <li><svg aria-hidden="true"><use href="#tick"/></svg>
+        <div><strong>Opinion flips</strong><span>Caving after you push back, with no new evidence.</span></div></li>
+      <li><svg aria-hidden="true"><use href="#tick"/></svg>
+        <div><strong>Unsupported confident claims</strong><span>"Definitely", "always", "guaranteed" with nothing behind them.</span></div></li>
+      <li><svg aria-hidden="true"><use href="#tick"/></svg>
+        <div><strong>Invented numbers and sources</strong><span>Too-precise statistics, fake citations, made-up quotes.</span></div></li>
+      <li><svg aria-hidden="true"><use href="#tick"/></svg>
+        <div><strong>Flattery</strong><span>Lavish praise for ordinary work.</span></div></li>
+      <li><svg aria-hidden="true"><use href="#tick"/></svg>
+        <div><strong>Silent agreement</strong><span>Going along with a false premise instead of correcting it.</span></div></li>
+      <li><svg aria-hidden="true"><use href="#tick"/></svg>
+        <div><strong>Watered-down criticism</strong><span>Feedback softened until it says nothing.</span></div></li>
+      <li><svg aria-hidden="true"><use href="#tick"/></svg>
+        <div><strong>Telling you what you hinted at</strong><span>Shifting the answer toward what you seem to want to hear.</span></div></li>
+      <li><svg aria-hidden="true"><use href="#tick"/></svg>
+        <div><strong>False certainty</strong><span>Confident predictions on questions experts would hedge.</span></div></li>
+    </ul>
   </section>
 
-  <section>
+  <!-- 4. Demo ============================================================= -->
+  <section id="demo">
     <div class="sec-head">
       <span class="sec-num">03</span>
+      <h2>See it in action</h2>
+    </div>
+
+    <div class="demo-slot">
+      <!-- DEMO VIDEO GOES HERE -->
+      <!-- Replace the <p> below with your recording. Either of these fills
+           the 16:9 slot automatically:
+             <video src="demo.mp4" controls playsinline poster="demo.jpg"></video>
+             <iframe src="https://www.youtube.com/embed/VIDEO_ID" title="Cue demo" allowfullscreen></iframe>
+      -->
+      <p>Demo video coming soon.</p>
+    </div>
+  </section>
+
+  <!-- 5. FAQ ============================================================== -->
+  <section id="faq">
+    <div class="sec-head">
+      <span class="sec-num">04</span>
       <h2>Questions</h2>
     </div>
 
     <div class="faq">
       <details>
-        <summary>How do I know it's on?</summary>
+        <summary>Does this work with ChatGPT?</summary>
         <p class="answer">
-          A tool named <strong>cue_status</strong> appears in your app's tools
-          panel whenever Cue is connected. Its presence is the indicator. Ask
-          your assistant to run it and Cue will confirm it is monitoring.
+          <strong>No.</strong> It is a Claude Skill and works in Claude.ai only.
+          It will not work in ChatGPT, Gemini, Copilot or any other AI app.
         </p>
       </details>
 
       <details>
-        <summary>What do the symbols mean?</summary>
+        <summary>Is this a one-time payment?</summary>
         <p class="answer">
-          A <strong>✓</strong> line means Cue checked the answer and found
-          nothing — that is how you know it is working. A <strong>⚠️</strong>
-          line means it found sycophancy or an unsupported claim, and it will
-          suggest a sharper way to ask. The suggestion is yours to use or
-          ignore; nothing is sent on your behalf.
+          <strong>Yes.</strong> You pay <span data-field="price"></span> once and
+          keep the Skill. No subscription, no renewals.
         </p>
       </details>
 
       <details>
-        <summary>Does Cue see my conversations?</summary>
+        <summary>Do I need to know how to code?</summary>
         <p class="answer">
-          Only the single message being checked, and only for the moment it takes
-          to check it. Nothing you or your AI writes is ever stored. The usage
-          records Cue keeps hold counts and timestamps — never text.
+          <strong>No.</strong> You upload one file in Claude's settings. There is
+          nothing to install or configure.
         </p>
       </details>
 
       <details>
-        <summary>Does it catch everything?</summary>
+        <summary>Does it send my chats anywhere?</summary>
         <p class="answer">
-          No. Your AI app decides when to call Cue, so coverage depends on the
-          app. Claude is the most consistent today; others call it less often. You
-          can always ask for a check directly.
+          No. The Skill is a set of instructions that runs inside your own
+          Claude account. There is no server, and we never see your
+          conversations.
         </p>
       </details>
 
       <details>
-        <summary>What does it cost?</summary>
+        <summary>Will it catch every mistake?</summary>
         <p class="answer">
-          Free covers five checks and three rewritten prompts each day, resetting
-          at midnight. Pro is $4.99 a month for unlimited use of both.
-        </p>
-      </details>
-
-      <details>
-        <summary>What languages does it work in?</summary>
-        <p class="answer">
-          Every alert and rewritten prompt comes back in the language you were
-          already writing in — English, Urdu, Roman Urdu, Hinglish, Arabic,
-          Spanish, or another. Cue does not switch languages on you.
+          No tool can promise that. It makes Claude check its own draft against
+          a detailed set of honesty rules before answering, which catches a lot
+          of what usually slips through. You can also ask Claude to run the
+          check on any reply.
         </p>
       </details>
     </div>
   </section>
 
-  <footer>
-    <div class="colophon">
-      <span>Cue</span>
-      <span>Set in JetBrains Mono</span>
+  <!-- MORE PRODUCTS ========================================================
+       When PRODUCTS in products.js has more than one entry, list the others
+       here as cards, e.g. an "Also available" section rendering every
+       product whose id is not FEATURED_PRODUCT_ID, each with its name,
+       price, tagline and its own lemonsqueezy-button link.
+       Not built yet: there is only one product today.
+       ===================================================================== -->
+
+  <!-- 6. Final call to action ============================================= -->
+  <section id="buy">
+    <div class="cta">
+      <h2>Make Claude check its own answers.</h2>
+      <p>One file, uploaded once. <span data-field="price"></span>, yours to keep.</p>
+      <a class="btn btn-lg lemonsqueezy-button" data-buy href="#buy">Buy Now</a>
     </div>
+  </section>
+
+  <!-- 7. Footer =========================================================== -->
+  <footer>
+    <div class="foot">
+      <span>© <span id="year">2026</span> Cue</span>
+      <nav aria-label="Legal">
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="terms.html">Terms of Service</a>
+      </nav>
+    </div>
+    <p class="disclaimer">
+      Cue is an independent product and is not affiliated with or endorsed by
+      Anthropic. Claude is a trademark of Anthropic.
+    </p>
   </footer>
 
 </div>
 
 <script>
+  // Fill every product field and Buy button from products.js. Runs before
+  // lemon.js (which is deferred), so the overlay sees the real links.
   (function () {
-    var btn = document.getElementById("copy");
-    var url = document.getElementById("url");
-    var timer;
+    var product = PRODUCTS.filter(function (p) {
+      return p.id === FEATURED_PRODUCT_ID;
+    })[0];
+    if (!product) {
+      console.warn("FEATURED_PRODUCT_ID matches no entry in PRODUCTS");
+      return;
+    }
 
-    btn.addEventListener("click", function () {
-      var text = url.textContent.trim();
-
-      function done() {
-        btn.textContent = "Copied";
-        btn.setAttribute("data-done", "1");
-        clearTimeout(timer);
-        timer = setTimeout(function () {
-          btn.textContent = "Copy";
-          btn.removeAttribute("data-done");
-        }, 2000);
-      }
-
-      function fallback() {
-        var ta = document.createElement("textarea");
-        ta.value = text;
-        ta.setAttribute("readonly", "");
-        ta.style.position = "fixed";
-        ta.style.opacity = "0";
-        document.body.appendChild(ta);
-        ta.select();
-        try { document.execCommand("copy"); done(); } catch (e) { /* no-op */ }
-        document.body.removeChild(ta);
-      }
-
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(done, fallback);
-      } else {
-        fallback();
-      }
+    document.querySelectorAll("[data-field]").forEach(function (el) {
+      el.textContent = product[el.getAttribute("data-field")];
     });
+
+    document.querySelectorAll("[data-buy]").forEach(function (a) {
+      a.href = product.checkoutUrl;
+      a.textContent =
+        a.getAttribute("data-buy-label") === "short"
+          ? "Buy Now"
+          : "Buy Now — " + product.price;
+    });
+
+    document.getElementById("year").textContent = new Date().getFullYear();
   })();
 </script>
+
+</body>
+</html>

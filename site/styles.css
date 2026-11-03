@@ -1,0 +1,454 @@
+/* =========================================================================
+   PALETTE — edit the shades here; nothing below hardcodes a colour.
+
+   White/cream dominates, orange is the one action colour, teal is a
+   sparing secondary accent. Each colour that carries text has a separate
+   "-text" shade, because the bright fill shades are too light to read as
+   text on cream. Every text pairing below meets WCAG AA (4.5:1).
+   ========================================================================= */
+
+:root {
+  /* Surfaces */
+  --color-bg: #FFFBF5;            /* warm off-white, the page */
+  --color-surface: #FFFFFF;       /* cards, FAQ, demo slot */
+  --color-surface-warm: #FFF1E3;  /* orange-tinted band behind the final CTA */
+  --color-border: #ECE3D8;
+
+  /* Text */
+  --color-text: #1F1D1A;          /* charcoal, never pure black */
+  --color-text-muted: #5A544D;
+
+  /* Primary: orange. Buttons, links, highlights. */
+  --color-primary: #FF6B1A;       /* button fill */
+  --color-primary-hover: #F05A00;
+  --color-on-primary: #1F1D1A;    /* text ON an orange button (5.9:1) */
+  --color-primary-text: #B8430A;  /* orange used AS text: links (5.3:1) */
+
+  /* Accent: teal. Badges, icons, dividers. Use sparingly. */
+  --color-accent: #14B8A6;
+  --color-accent-soft: #D5F5F0;
+  --color-accent-text: #0F766E;
+
+  /* Type and layout */
+  --font: "JetBrains Mono", "IBM Plex Mono", "Courier New", Courier, monospace;
+  --measure: 64ch;
+  --gut: clamp(1rem, 5vw, 4rem);
+  --space-section: clamp(4rem, 12vh, 8rem);
+  --radius: 10px;
+  --tap: 48px;                    /* minimum height of anything tappable */
+}
+
+/* ---------- base ---------- */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font);
+  font-weight: 400;
+  font-size: clamp(0.875rem, 0.84rem + 0.2vw, 1rem);
+  line-height: 1.75;
+  font-feature-settings: "liga" 0;
+  overflow-x: hidden;
+}
+
+/* Monospace never hyphenates, so a long token could otherwise push the page
+   wider than the viewport. */
+p, li, dd, summary, h1, h2, h3 { overflow-wrap: break-word; }
+
+img, video, iframe { max-width: 100%; display: block; }
+
+::selection { background: var(--color-primary); color: var(--color-on-primary); }
+
+a { color: var(--color-primary-text); text-underline-offset: 0.2em; }
+a:hover { color: var(--color-primary-hover); }
+
+:focus-visible { outline: 2px solid var(--color-primary-text); outline-offset: 3px; }
+
+.wrap { max-width: 72rem; margin: 0 auto; padding: 0 var(--gut); }
+
+/* ---------- masthead ---------- */
+
+.masthead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem 0;
+  border-bottom: 1px solid var(--color-border);
+  flex-wrap: wrap;
+}
+
+.lockup {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-height: 44px;
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.lockup:hover { color: var(--color-text); }
+
+.mark {
+  width: 1.7em;
+  height: 1.7em;
+  flex: none;
+  overflow: visible;
+  stroke: var(--color-text);
+  stroke-width: 2.4;
+  stroke-linecap: butt;
+}
+
+.mark path { fill: none; }
+/* The dot is Cue's intervention, so it carries the action colour. */
+.mark circle { fill: var(--color-primary); stroke: none; }
+
+.wordmark { letter-spacing: 0.5em; text-indent: 0.5em; }
+
+.masthead .nav-buy { min-height: 44px; padding: 0 1rem; font-size: 0.8125rem; }
+
+/* ---------- buttons ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap);
+  padding: 0 1.75rem;
+  border-radius: var(--radius);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-family: var(--font);
+  font-weight: 700;
+  font-size: 1rem;
+  text-decoration: none;
+  text-align: center;
+  line-height: 1.3;
+  border: 0;
+  cursor: pointer;
+  box-shadow: 0 1px 0 rgba(31, 29, 26, 0.08), 0 6px 18px -8px var(--color-primary);
+  transition: background-color 160ms ease, transform 160ms ease;
+}
+
+.btn:hover { background: var(--color-primary-hover); color: var(--color-on-primary); }
+.btn:active { transform: translateY(1px); }
+
+.btn-lg { min-height: 56px; padding: 0 2.25rem; font-size: 1.0625rem; }
+
+/* ---------- badge ---------- */
+
+.badge {
+  display: inline-block;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  background: var(--color-accent-soft);
+  color: var(--color-accent-text);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* ---------- hero ---------- */
+
+.hero { padding: clamp(3.5rem, 12vh, 8rem) 0 var(--space-section); }
+
+.thesis {
+  font-size: clamp(2rem, 1.2rem + 3.6vw, 4.25rem);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.05em;
+  margin: 1.5rem 0 0;
+  max-width: 18ch;
+  text-wrap: balance;
+}
+
+.thesis em {
+  font-style: normal;
+  font-weight: 700;
+  color: var(--color-primary-text);
+}
+
+.standfirst {
+  margin: 1.75rem 0 0;
+  max-width: 52ch;
+  color: var(--color-text-muted);
+  font-size: 1.0625em;
+}
+
+.offer {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem 2rem;
+  flex-wrap: wrap;
+  margin-top: 2.5rem;
+}
+
+.price { display: flex; flex-direction: column; line-height: 1.2; }
+.price-amount { font-size: clamp(2rem, 1.6rem + 1.4vw, 2.75rem); font-weight: 700; letter-spacing: -0.04em; }
+.price-note { color: var(--color-text-muted); font-size: 0.8125rem; }
+
+.claude-only {
+  margin: 1.25rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+}
+
+/* ---------- sections ---------- */
+
+section { padding: var(--space-section) 0; border-top: 1px solid var(--color-border); }
+
+.sec-head {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  margin: 0 0 clamp(2rem, 6vh, 3.5rem);
+}
+
+.sec-num {
+  color: var(--color-accent-text);
+  font-weight: 700;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+h2 {
+  font-size: clamp(1.375rem, 1.1rem + 1vw, 2rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin: 0;
+}
+
+/* ---------- how it works ---------- */
+
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.step {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-top: 3px solid var(--color-accent);
+  border-radius: var(--radius);
+  padding: 1.5rem 1.25rem;
+}
+
+.step-num {
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--color-accent-soft);
+  color: var(--color-accent-text);
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+
+.step h3 { margin: 1rem 0 0.4rem; font-size: 1rem; font-weight: 700; }
+.step p { margin: 0; color: var(--color-text-muted); font-size: 0.875rem; }
+
+.path { color: var(--color-text); font-weight: 700; }
+
+/* ---------- what it catches ---------- */
+
+.catches {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 2.5rem;
+  max-width: 60rem;
+}
+
+.catches li {
+  display: grid;
+  grid-template-columns: 1.5rem 1fr;
+  gap: 0.75rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.catches svg { width: 1.25rem; height: 1.25rem; margin-top: 0.2rem; color: var(--color-accent); }
+.catches strong { display: block; font-weight: 700; }
+.catches span { color: var(--color-text-muted); font-size: 0.875rem; }
+
+/* ---------- demo ---------- */
+
+.demo-slot {
+  aspect-ratio: 16 / 9;
+  max-width: 60rem;
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  text-align: center;
+  padding: 1rem;
+}
+
+/* A real video/iframe dropped into the slot fills it edge to edge. */
+.demo-slot > video, .demo-slot > iframe, .demo-slot > img {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  object-fit: cover;
+}
+
+/* ---------- faq ---------- */
+
+.faq { max-width: var(--measure); }
+
+.faq details {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.faq details + details { margin-top: 0.75rem; }
+
+.faq summary {
+  cursor: pointer;
+  min-height: var(--tap);
+  padding: 1rem 3rem 1rem 1.25rem;
+  position: relative;
+  font-weight: 700;
+  list-style: none;
+  display: flex;
+  align-items: center;
+}
+
+.faq summary::-webkit-details-marker { display: none; }
+
+/* Plus that becomes a minus. */
+.faq summary::after,
+.faq summary::before {
+  content: "";
+  position: absolute;
+  right: 1.25rem;
+  top: 50%;
+  width: 0.75rem;
+  height: 2px;
+  background: var(--color-primary-text);
+  transform: translateY(-50%);
+}
+
+.faq summary::before { transform: translateY(-50%) rotate(90deg); transition: opacity 160ms ease; }
+.faq details[open] summary::before { opacity: 0; }
+
+.faq .answer {
+  margin: 0;
+  padding: 0 1.25rem 1.25rem;
+  color: var(--color-text-muted);
+}
+
+.faq .answer strong { color: var(--color-text); }
+
+/* ---------- final call to action ---------- */
+
+.cta {
+  background: var(--color-surface-warm);
+  border-radius: calc(var(--radius) * 1.6);
+  padding: clamp(2.5rem, 7vw, 4.5rem) clamp(1.25rem, 5vw, 4rem);
+  text-align: center;
+}
+
+.cta h2 { max-width: 22ch; margin: 0 auto; text-wrap: balance; }
+.cta p { margin: 1rem auto 2rem; max-width: 46ch; color: var(--color-text-muted); }
+
+/* ---------- footer ---------- */
+
+footer {
+  padding: 2.5rem 0 3rem;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+}
+
+.foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem 2rem;
+  flex-wrap: wrap;
+}
+
+.foot nav { display: flex; gap: 0.25rem 1.5rem; flex-wrap: wrap; }
+
+/* Footer links get a full tap target without looking like buttons. */
+.foot nav a { display: inline-flex; align-items: center; min-height: 44px; }
+
+.disclaimer { margin: 1.25rem 0 0; font-size: 0.75rem; }
+
+/* ---------- legal pages ---------- */
+
+.legal { padding: clamp(2.5rem, 8vh, 5rem) 0 var(--space-section); max-width: var(--measure); }
+.legal h1 { font-size: clamp(1.75rem, 1.3rem + 1.6vw, 2.5rem); letter-spacing: -0.04em; line-height: 1.15; margin: 0 0 0.5rem; }
+.legal h2 { font-size: 1.125rem; margin: 2.5rem 0 0.5rem; }
+.legal p, .legal li { color: var(--color-text-muted); }
+.legal .updated { margin: 0 0 2rem; font-size: 0.8125rem; }
+
+.draft-note {
+  border-left: 4px solid var(--color-accent);
+  background: var(--color-accent-soft);
+  color: var(--color-accent-text);
+  padding: 0.85rem 1rem;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  font-size: 0.8125rem;
+}
+
+/* Placeholders the owner still has to fill in. Loud on purpose. */
+.todo {
+  background: var(--color-surface-warm);
+  color: var(--color-primary-text);
+  font-weight: 700;
+  padding: 0 0.25em;
+  border-radius: 3px;
+}
+
+/* ---------- responsive ----------
+   60rem: four step cards stop fitting side by side.
+   40rem: phones. Everything stacks and the buttons go full width. */
+
+@media (max-width: 60rem) {
+  .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 40rem) {
+  .steps, .catches { grid-template-columns: 1fr; }
+
+  .wordmark { letter-spacing: 0.3em; text-indent: 0.3em; }
+
+  .offer { flex-direction: column; align-items: stretch; gap: 1rem; }
+  .offer .btn, .cta .btn { width: 100%; }
+
+  .thesis { max-width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}

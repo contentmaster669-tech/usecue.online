@@ -1,70 +1,47 @@
-# Cue — AI Honesty Guardian
+# Cue — ordering site
 
-An MCP server that detects sycophancy (an AI agreeing to please) and
-hallucination (confident falsehoods) in AI responses. When a problem is found
-it returns a short alert plus one rewritten prompt, in the user's own language.
-When nothing is wrong it returns nothing at all.
+The marketing and checkout site for **Cue Honesty Check**, a one-time-purchase
+Claude Skill that makes Claude audit its own draft for sycophancy and
+hallucination. Live at `https://usecue.online`.
 
-Silence is the product.
+It is a static site: plain HTML, one stylesheet, no build step. Checkout and
+file delivery are handled entirely by Lemon Squeezy.
 
-## Tools
+## Files
 
-| Tool | Cost | Purpose |
-|---|---|---|
-| `cue_status` | free | Active Indicator. Static string, no API or DB call. |
-| `analyze_message` | 1 check | Audits a draft response. Returns `""` unless a problem is found. |
-| `check_usage` | free | Remaining daily quota and plan. |
-
-## Setup
-
-```bash
-pip install -e ".[dev]"
-cp .env.example .env        # then fill in the three values
-```
-
-Run the migrations in `supabase/migrations/` against your Supabase project,
-in order (001, 002, 003) — the SQL editor works fine.
-
-Issue yourself a key:
-
-```bash
-python scripts/issue_key.py you@example.com
-```
-
-The raw key prints once and is not recoverable. Your connector URL is
-`https://usecue.online/mcp`, which is what users paste into their AI
-header. Both go into your AI app's connector settings.
-
-## Development
-
-```bash
-pytest                       # all tests
-pytest tests/test_quota.py   # one file
-pytest -k silence            # the tests that matter most
-ruff check . && ruff format .
-vercel dev                   # local serverless emulation
-vercel --prod                # deploy
-```
-
-## Environment
-
-| Variable | Notes |
+| File | What it is |
 |---|---|
-| `OPENAI_API_KEY` | Detection calls. |
-| `SUPABASE_URL` | Project URL. |
-| `SUPABASE_SERVICE_KEY` | Must be the **service role** key — RLS is deny-by-default, so the anon key reads zero rows. `SUPABASE_KEY` is accepted as an alias. |
+| `site/index.html` | The landing + ordering page |
+| `site/products.js` | **Product data** — name, price, tagline, checkout link |
+| `site/styles.css` | All styles; the colour palette is at the top |
+| `site/privacy.html` | Privacy Policy (draft placeholder) |
+| `site/terms.html` | Terms of Service (draft placeholder) |
+| `vercel.json` | Serves `site/` as static files, with clean URLs (`/privacy`) |
 
-## Design notes
+## Common edits
 
-Two constraints shape everything, and both contradict the obvious assumption:
+- **Price, name or checkout link** → `site/products.js`. Nothing else in the
+  site hardcodes them.
+- **Colours** → the `:root` block at the top of `site/styles.css`.
+- **Demo video** → `site/index.html`, search for `DEMO VIDEO GOES HERE`.
+- **Add a second product** → append an entry to `PRODUCTS` in
+  `site/products.js`, then build the card list where `index.html` says
+  `MORE PRODUCTS`.
 
-**MCP cannot intercept AI responses.** It is a pull protocol — the client
-decides when to call, and there is no per-message hook. Near-passive operation
-comes only from `analyze_message`'s tool *description* persuading the host
-model to self-audit. Claude complies reliably; other clients less so.
+## Run locally
 
-**`serverInfo` is not rendered by Claude's connector UI.** The name shown in
-Settings is whatever the user typed when adding the URL. That is why the
-Active Indicator is a *tool* — its presence in the tools panel is the signal.
+```bash
+cd site
+python -m http.server 8765
+# open http://127.0.0.1:8765
+```
 
-See `CLAUDE.md` for the full set of non-obvious constraints.
+Any static file server works. Note that `/privacy` (without `.html`) only
+resolves on Vercel, where `cleanUrls` is on; the site itself links to
+`privacy.html`, which works everywhere.
+
+## Deploy
+
+```bash
+vercel --prod
+```
